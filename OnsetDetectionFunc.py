@@ -6,13 +6,16 @@ import os
 
 onsets_complex_phase = []
 
-def OnsetDetectionF(fileName, alpha, silenceThreshold):
+def OnsetDetectionF(fileName, method, alpha, silenceThreshold):
 	
 	#####	LOADING AUDIO
 	loader = essentia.standard.MonoLoader(filename = fileName)
 	audio = loader()
 	ALP = alpha
 	ST = silenceThreshold
+	METHOD = method
+	#DELAY = delay
+	
 	#####	PREPARING FUNCTIONS
 	w = Windowing(type = 'hann')
 	fft = FFT() 				# this gives us a complex FFT
@@ -21,36 +24,45 @@ def OnsetDetectionF(fileName, alpha, silenceThreshold):
 	onsets = Onsets(alpha=ALP,silenceThreshold=ST)# (alpha, silenceThreshold)			#alpha, silenceThreshold
 
 	
-	##### COMPUTING OnsetDetection ESSENTIA FUNCTION AND SAVING ON ESSENTIA POOL
-	od = OnsetDetection(method='complex_phase')		#Many possible methods, but COMPLEX PHASE works well on bow string instruments.
+	#####	COMPUTING OnsetDetection ESSENTIA FUNCTION AND SAVING ON ESSENTIA POOL
+	od = OnsetDetection(method=METHOD)		#Many possible methods, but COMPLEX PHASE works well on bow string instruments.
 	mag = []
 	phase = []
 
 	for frame in FrameGenerator(audio, frameSize = 1024, hopSize = 512):
 		mag, phase, = c2p(fft(w(frame)))
-		pool.add('features.complex_phase', od(mag, phase))
-
+		pool.add('features', od(mag, phase))
 	
-	#####COMPUTING ONSET FUNCTIONS USING OnsetDetection FUNCTION
-	onsets_complex_phase = onsets(essentia.array([ pool['features.complex_phase'] ]), [ 1 ])
+	#####	COMPUTING ONSET FUNCTIONS USING OnsetDetection FUNCTION
+	onsets_detected = onsets(essentia.array([ pool['features'] ]), [ 1 ])
 
-	#####FANTASIA
+	#####	DELETING REPEATED MARKERS (If two markers are too close [min_delay], then only keep the first one)
 	realOnsets = []
-
 	delidx = []
-	for x in range(1,len(onsets_complex_phase)):
-	    if (onsets_complex_phase[x] - onsets_complex_phase[x-1]) < 1:
+	min_delay = 1	#min_delay is the minimum delay between onsets
+	for x in range(1,len(onsets_detected)):
+	    if (onsets_detected[x] - onsets_detected[x-1]) < min_delay:
 	        delidx.append(x)
-	realOnsets = np.delete(onsets_complex_phase,delidx)
+	realOnsets = np.delete(onsets_detected,delidx)
 
 	
 
-	##### WRITE BEEP MARKERS ON THE AUDIO
-	marker = []
-	marker = AudioOnsetsMarker(onsets=onsets_complex_phase, type='beep')
+	#####	WRITE BEEP MARKERS ON THE AUDIO
+	#marker = []
+	#marker = AudioOnsetsMarker(onsets=onsets_detected, type='beep')
+	#marked_audio = marker(audio)
+	#MonoWriter(filename='results/onsets_detected-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD)))(marked_audio)
 
 
-	marked_audio = marker(audio)
-	#MonoWriter(filename='testWAVS/onsets_complex_phase-a-a%s-st%s.wav'%(str(ALP),str(ST)))(marked_audio)
+	#####	WRITE BEEPS ON MODIFIED MARKERS
+	realMarker = []
+	realMarker = AudioOnsetsMarker(onsets=realOnsets, type='beep')
+	realMarked_audio = realMarker(audio)
+	fileDir = fileName.rsplit('/', 1)[-2]
+	print fileName
+	print fileDir
+	print fileDir + '/realonsets_detected-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD))
+	MonoWriter(filename= fileDir + '/realonsets_detected-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD)))(realMarked_audio)
 
-	return onsets_complex_phase,realOnsets
+
+	return onsets_detected,realOnsets
