@@ -58,11 +58,20 @@ def OnsetDetectionF(fileName, method, alpha, silenceThreshold):
 	realMarker = []
 	realMarker = AudioOnsetsMarker(onsets=realOnsets, type='beep')
 	realMarked_audio = realMarker(audio)
+
+	#####	SAVING DIR AND FILE NAMES
+
 	fileDir = fileName.rsplit('/', 1)[-2]
-	print fileName
-	print fileDir
-	print fileDir + '/realonsets_detected-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD))
-	MonoWriter(filename= fileDir + '/realonsets_detected-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD)))(realMarked_audio)
+
+	fileName_only = fileName.rsplit('/', 1)[-1]
+	fileName_only = fileName_only.rsplit('.', 1)[-2]
+	resultsDir = '/home/pedro/tfm/Results/'
+
+#	print fileName_only
+#	print fileDir
+#	print fileDir + '/realonsets_detected-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD))
+	print resultsDir + fileName_only + '-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD))
+	MonoWriter(filename= resultsDir + fileName_only + '-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD)))(realMarked_audio)
 
 
 	return onsets_detected,realOnsets
