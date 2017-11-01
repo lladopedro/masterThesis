@@ -1,10 +1,14 @@
 from OnsetDetectionFunc import OnsetDetectionF
+from OffsetDetectionFunc2 import OfsetDetectionF
 from dataExplorer import fetchFiles
 
 #####	RETURN PATH AND FILES NAMES OF ALL THE ".WAV" OF THE DIRECTORY
 
 listOfFiles = fetchFiles("/home/pedro/tfm/dataBase/",".wav")
 
+
+##### DIRECTORY OF RESULTS
+resultsDir = '/home/pedro/tfm/Results/'
 
 #print listOfFiles[0][0] + '/' + listOfFiles[0][1]
 
@@ -18,10 +22,23 @@ silenceThreshold = 0.04
 
 #####	COMPUTE THE ONSETS
 
-#for alpha in 0.3, 0.4, 0.5, 0.6:
-#	for silenceThreshold in  0.03, 0.035, 0.04, 0.045, 0.05, 0.055:
+#for i in range (0,len(listOfFiles)):
+#	Onsets,realOS= OnsetDetectionF(listOfFiles[i][0] + '/' + listOfFiles[i][1], method, alpha, silenceThreshold)
+
+
+#####	COMPUTE THE OFFSETS
+
 for i in range (0,len(listOfFiles)):
-	Onsets,realOS= OnsetDetectionF(listOfFiles[i][0] + '/' + listOfFiles[i][1], method, alpha, silenceThreshold)
+	print listOfFiles[i][0] + '/' + listOfFiles[i][1]
+	realOffS= OfsetDetectionF(listOfFiles[i][0] + '/' + listOfFiles[i][1], method, alpha, silenceThreshold)
+	
+
+#####	WRITE IN A TXT THE ONSETS DETECTED AND SAVED INTO A TXT FOR SONIC VISUALISER
+
+#	onsetsAnnotation = open( str(listOfFiles[i][0]) + '/' + str(listOfFiles[i][1]).split('.')[-2] + 'Onsets.txt', 'w' )
+#	for i in range(0,len(realOS)-1):
+#		onsetsAnnotation.write( str(realOS[i]) + "\n")
+#	onsetsAnnotation.close()
 
 
 ##### WRITE IN A TXT THE ONSETS DETECTED (PUT INTO THE SAME FOR UPWARDS IF NEEDED)
