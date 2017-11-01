@@ -30,7 +30,7 @@ def OnsetDetectionF(fileName, method, alpha, silenceThreshold):
 	phase = []
 
 	for frame in FrameGenerator(audio, frameSize = 1024, hopSize = 512):
-		mag, phase, = c2p(fft(w(frame)))
+		mag, phase = c2p(fft(w(frame)))
 		pool.add('features', od(mag, phase))
 	
 	#####	COMPUTING ONSET FUNCTIONS USING OnsetDetection FUNCTION
@@ -71,7 +71,6 @@ def OnsetDetectionF(fileName, method, alpha, silenceThreshold):
 #	print fileDir
 #	print fileDir + '/realonsets_detected-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD))
 	print resultsDir + fileName_only + '-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD))
-	MonoWriter(filename= resultsDir + fileName_only + '-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD)))(realMarked_audio)
-
+	#MonoWriter(filename= resultsDir + fileName_only + '-a%s-st%s-%s.wav'%(str(ALP),str(ST),str(METHOD)))(realMarked_audio)
 
 	return onsets_detected,realOnsets
