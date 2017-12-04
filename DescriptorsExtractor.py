@@ -7,44 +7,55 @@ import numpy as np
 import csv
 
 
+def featExtraction (inputFile)
 
-def fetchFiles(inputDir = '/home/pedro/TFM/ZOOM0006/', fileType=".wav"):
-    ListOfFiles = []
-    for path,dir_names,files_names in os.walk(inputDir):
-        for file_name in files_names:
-            if fileType in file_name.lower():
-                ListOfFiles.append((path, file_name))
-    return(ListOfFiles)
+    #fileName = inputFile
+    fileName = '/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/ZOOM0007_Tr1.WAV'
+    SR = 44100
+
+    #####   LOADING AUDIO
+    loader = essentia.standard.MonoLoader(filename = fileName)
+    audio = loader()
+
+    ##### IMPORT ONSETS
+
+    onsetsList = []
+    onsets = []
+
+    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/ZOOM0007_Tr1Onsets.txt', 'r') as f:
+        onsetsList = f.readlines()
+    
+    for i in range(0,len(onsetsList)):
+        onsets.append(float(str(onsetsList[i]).split("\n",1)[0]))
 
 
+    ##### IMPORT ONSETS
 
-def extract_mfcc(ListOfFiles):
+    offsetsList = []
+    offsets = []
 
-    w = Windowing(type = 'hann')
-    spectrum = Spectrum()
-    mfcc = MFCC()
+    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/ZOOM0007_Tr1Offsets.txt', 'r') as f:
+        offsetsList = f.readlines()
+    
+    for i in range(0,len(offsetsList)):
+        offsets.append(float(str(offsetsList[i]).split("\n",1)[0]))
 
-    for path, file in ListOfFiles:
-        file_name, extension = os.path.splitext(file)
-        file_location = path + "/" + file
-        print file_location
+    ##### CALCULATE ONSETS AND OFFSETS SAMPLES
 
-        #computing mfcc
-        loader = essentia.standard.MonoLoader(filename = file_location)
-        audio = loader()
-        pool = essentia.Pool()
-        for frame in FrameGenerator(audio, frameSize = 1024, hopSize = 512, startFromZero=True):
-            mfcc_bands, mfcc_coeffs = mfcc(spectrum(w(frame)))
-            pool.add('lowlevel.mfcc', mfcc_coeffs)
-            pool.add('lowlevel.mfcc_bands', mfcc_bands)
+    s_onsets=[]
+    s_offsets=[]
+    for i in range (0,len(onsets)): s_onsets.append(int(round(onsets[i]*SR,0)))
+    for i in range (0,len(offsets)): s_offsets.append(int(round(offsets[i]*SR,0)))
 
-        # saving Mfcc per frame.
-        # YamlOutput(filename = path + "/"+ file_name + ".json", format = "json")(pool) t
-        # saving Mfcc aggregated per audio file
-        aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)
-        YamlOutput(filename = path + "/"+ file_name + ".json", format = "json")(aggrPool)
 
-#extractFeatures from one file
+    wmargin = int(round(0.1*SR))    #MARGIN FOR NOTES ISOLATION : 100 ms  
+    note = []
+    for i in range(0,len(s_onsets)):
+        note.append(audio[s_onsets[i]-wmargin:s_offsets[i]+wmargin])
+
+
+    ###############################
+
 
 def extractFeatures(fileName):
 
@@ -64,8 +75,8 @@ def extractFeatures(fileName):
                         tonalHopSize = 2048,
                         tuning = True)
 
-    JsonFile = '/home/pedro/TFM/ZOOM0006/resultTest.json'
-    JsonAggrFile = '/home/pedro/TFM/ZOOM0006/resultTestAggr.json'
+    JsonFile = '/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/resultTest.json'
+    JsonAggrFile = '/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/resultTestAggr.json'
 
     #w = Windowing(type = 'hann') #only for the spectrum
     #spectrum = Spectrum()  # FFT() would return the complex FFT, here we just want the magnitude spectrum
@@ -82,16 +93,49 @@ def extractFeatures(fileName):
     YamlOutput(filename = JsonAggrFile, format="json")(aggrPool)
 
 
+###################################################################################################################
+
     ############ CSV
-    with open('/home/pedro/TFM/ZOOM0006/ZOOM0006_Tr1.csv', 'w') as file:
-        writer = csv.writer(file)
-        for item in pool.descriptorNames():
-            writer.writerow([pool[item]])
+    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/test.csv', 'w') as csvfile:
+        fieldnames = ['Note', 'Frame', 'InitTime', 'Duration']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        'Note', 'Frame', 'InitTime', 'Duration'
+        writer.writerow({'Note':'nota1', 'Frame':'whatever', 'InitTime':'aLes10', 'Duration':'unRato'})
     ############
 
 #def main():
 #    data = fetchFiles(inputDir)
 #    extract_mfcc(data)
+
+#def extract_mfcc(ListOfFiles):
+#
+#    w = Windowing(type = 'hann')
+#    spectrum = Spectrum()
+#    mfcc = MFCC()
+
+#    for path, file in ListOfFiles:
+#        file_name, extension = os.path.splitext(file)
+#        file_location = path + "/" + file
+#        print file_location
+
+        #computing mfcc
+#        loader = essentia.standard.MonoLoader(filename = file_location)
+#        audio = loader()
+#        pool = essentia.Pool()
+#        for frame in FrameGenerator(audio, frameSize = 1024, hopSize = 512, startFromZero=True):
+#            mfcc_bands, mfcc_coeffs = mfcc(spectrum(w(frame)))
+#            pool.add('lowlevel.mfcc', mfcc_coeffs)
+#            pool.add('lowlevel.mfcc_bands', mfcc_bands)
+
+        # saving Mfcc per frame.
+        # YamlOutput(filename = path + "/"+ file_name + ".json", format = "json")(pool) t
+        # saving Mfcc aggregated per audio file
+#        aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)
+#        YamlOutput(filename = path + "/"+ file_name + ".json", format = "json")(aggrPool)
+
+#extractFeatures from one file
 
 
 if __name__ == "__main__":
