@@ -62,18 +62,18 @@ def extractFeatures(fileName):
     extractor = Extractor(dynamics = True,
                         dynamicsFrameSize = 88200,
                         dynamicsHopSize = 44100,
-                        highLevel = True,
+                        highLevel = False,
                         lowLevel = True,
                         lowLevelFrameSize = 4096,
                         lowLevelHopSize = 2048,
-                        midLevel = True,
+                        midLevel = False,
                         namespace = "",
                         relativeIoi = False,
-                        rhythm = True,
+                        rhythm = False,
                         sampleRate  = 44100,
                         tonalFrameSize  = 4096,
                         tonalHopSize = 2048,
-                        tuning = True)
+                        tuning = False)
 
     JsonFile = '/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/resultTest.json'
     JsonAggrFile = '/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/resultTestAggr.json'
@@ -95,14 +95,22 @@ def extractFeatures(fileName):
 
 ###################################################################################################################
 
-    ############ CSV
-    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/test.csv', 'w') as csvfile:
-        fieldnames = ['Note', 'Frame', 'InitTime', 'Duration']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+#    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/test.csv', 'w') as csvfile:
+#        fieldnames = ['Note', 'Frame', 'InitTime', 'Duration']
+#        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+#
+#        writer.writeheader()
+#        'Note', 'Frame', 'InitTime', 'Duration'
+#        writer.writerow({'Note':'nota1', 'Frame':'whatever', 'InitTime':'aLes10', 'Duration':'unRato'})
 
-        writer.writeheader()
-        'Note', 'Frame', 'InitTime', 'Duration'
-        writer.writerow({'Note':'nota1', 'Frame':'whatever', 'InitTime':'aLes10', 'Duration':'unRato'})
+
+    fieldNames = aggrPool.descriptorNames()
+
+    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/test.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(fieldNames)
+        arr= [aggrPool[f] for f in fieldNames]
+        writer.writerow(arr)
     ############
 
 #def main():
