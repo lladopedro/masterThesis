@@ -54,10 +54,6 @@ def featExtraction (inputFile)
         note.append(audio[s_onsets[i]-wmargin:s_offsets[i]+wmargin])
 
 
-    ###############################
-
-
-def extractFeatures(fileName):
 
     extractor = Extractor(dynamics = True,
                         dynamicsFrameSize = 88200,
@@ -81,36 +77,36 @@ def extractFeatures(fileName):
     #w = Windowing(type = 'hann') #only for the spectrum
     #spectrum = Spectrum()  # FFT() would return the complex FFT, here we just want the magnitude spectrum
 
-    loader = essentia.standard.MonoLoader(filename = fileName)
-    audio = loader()
+    #loader = essentia.standard.MonoLoader(filename = fileName)
+    #audio = loader()
     pool = essentia.Pool()
-    pool = extractor(audio)
-    #for frame in FrameGenerator(audio, frameSize = 4096, hopSize = 2048, startFromZero=False):
-    #    pool.add('lowLevel.spectrum', spectrum(w(frame)))
-
-    aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)
-    YamlOutput(filename = JsonFile, format = "json")(pool)
-    YamlOutput(filename = JsonAggrFile, format="json")(aggrPool)
+    pool = extractor(note[0])   #to get all the descriptorNames
+    aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)   #creating a pool for MEAN and VAR of descriptors
+    #YamlOutput(filename = JsonFile, format = "json")(pool)
+    #YamlOutput(filename = JsonAggrFile, format="json")(aggrPool)
 
 
-###################################################################################################################
-
-#    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/test.csv', 'w') as csvfile:
-#        fieldnames = ['Note', 'Frame', 'InitTime', 'Duration']
-#        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-#
-#        writer.writeheader()
-#        'Note', 'Frame', 'InitTime', 'Duration'
-#        writer.writerow({'Note':'nota1', 'Frame':'whatever', 'InitTime':'aLes10', 'Duration':'unRato'})
 
 
-    fieldNames = aggrPool.descriptorNames()
+    ##### WRITING CSV FILES
+
+    fieldNames = pool.descriptorNames()[0:4]
+    fieldNamesAggr = aggrPool.descriptorNames()[0:8]
+
 
     with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/test.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(fieldNames)
-        arr= [aggrPool[f] for f in fieldNames]
-        writer.writerow(arr)
+        for i in range(0, len(note)):
+            pool = extractor(note[i])
+            for j in range(0,10):#len(note[i]/2048 +2)):
+                arr = [pool[f][j] for f in fieldNames]
+                writer.writerow(arr)
+
+
+  
+
+
     ############
 
 #def main():
