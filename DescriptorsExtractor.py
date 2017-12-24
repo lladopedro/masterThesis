@@ -7,10 +7,10 @@ import numpy as np
 import csv
 
 
-def featExtraction (inputFile)
+def featExtraction (inputFile):
 
     #fileName = inputFile
-    fileName = '/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/ZOOM0007_Tr1.WAV'
+    fileName = inputFile
     SR = 44100
 
     #####   LOADING AUDIO
@@ -22,19 +22,20 @@ def featExtraction (inputFile)
     onsetsList = []
     onsets = []
 
-    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/ZOOM0007_Tr1Onsets.txt', 'r') as f:
+
+    with open(fileName.split('.')[0]+'Onsets.txt', 'r') as f:
         onsetsList = f.readlines()
     
     for i in range(0,len(onsetsList)):
         onsets.append(float(str(onsetsList[i]).split("\n",1)[0]))
 
 
-    ##### IMPORT ONSETS
+    ##### IMPORT OFFSETS
 
     offsetsList = []
     offsets = []
 
-    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/ZOOM0007_Tr1Offsets.txt', 'r') as f:
+    with open(fileName.split('.')[0]+'Offsets.txt', 'r') as f:
         offsetsList = f.readlines()
     
     for i in range(0,len(offsetsList)):
@@ -71,8 +72,7 @@ def featExtraction (inputFile)
                         tonalHopSize = 2048,
                         tuning = False)
 
-    JsonFile = '/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/resultTest.json'
-    JsonAggrFile = '/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/resultTestAggr.json'
+
 
     #w = Windowing(type = 'hann') #only for the spectrum
     #spectrum = Spectrum()  # FFT() would return the complex FFT, here we just want the magnitude spectrum
@@ -82,27 +82,54 @@ def featExtraction (inputFile)
     pool = essentia.Pool()
     pool = extractor(note[0])   #to get all the descriptorNames
     aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)   #creating a pool for MEAN and VAR of descriptors
+
+
+    ##### NEED JSON FILES?
+
+    #JsonFile = str(fileName.rsplit('/',1)[0]) + '/resultTest.json'
+    #JsonAggrFile = str(fileName.rsplit('/',1)[0]) + '/resultTestAggr.json'
     #YamlOutput(filename = JsonFile, format = "json")(pool)
     #YamlOutput(filename = JsonAggrFile, format="json")(aggrPool)
 
 
+    ##### NOTES SENTENCE
+    annotatedNote = []
+    annotatedNote = ['la3', 'mi4', 'la4', 'do4', 'do3', 'fa3', 're4', 'mi4']
 
 
     ##### WRITING CSV FILES
 
     fieldNames = pool.descriptorNames()[0:4]
+
+    fieldNamesCSV = []
+    fieldNamesCSV.append('Note')
+    for i in range(0,4): fieldNamesCSV.append(pool.descriptorNames()[i])
     fieldNamesAggr = aggrPool.descriptorNames()[0:8]
 
+    print fieldNames
+    print type(fieldNames)
 
-    with open('/home/pedro/tfm/dataBase/CorrectedAudioSofia/ZOOM0007/test.csv', 'w') as csvfile:
+    with open(str(fileName.rsplit('/',1)[0]) + '/test.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(fieldNames)
+        writer.writerow(fieldNamesCSV)
         for i in range(0, len(note)):
             pool = extractor(note[i])
             for j in range(0,10):#len(note[i]/2048 +2)):
-                arr = [pool[f][j] for f in fieldNames]
+                arr = []
+                arr.append(annotatedNote[i])
+                for f in fieldNames: arr.append(pool[f][j])
                 writer.writerow(arr)
 
+    #ADD THE fieldNamesAggrCSV to write the needed columns!
+
+    with open(str(fileName.rsplit('/',1)[0]) + '/testAggr.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(fieldNamesAggr)
+        for i in range(0, len(note)):
+            pool = extractor(note[i])
+            aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)
+            arr = [aggrPool[f] for f in fieldNamesAggr]
+            writer.writerow(arr)
 
   
 
