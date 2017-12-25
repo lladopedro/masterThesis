@@ -3,8 +3,6 @@ from dataExplorer import fetchFiles
 
 listOfFiles = fetchFiles("/home/pedro/tfm/dataBase/CorrectedAudioSofia",".wav")
 
-inputFile = listOfFiles[0][0]+'/'+listOfFiles[0][1]
-
-print inputFile
-
-featExtraction(inputFile)
+for i in range (0,len(listOfFiles)):
+	print (listOfFiles[i][0]+'/'+listOfFiles[i][1])
+	featExtraction(listOfFiles[i][0]+'/'+listOfFiles[i][1])
