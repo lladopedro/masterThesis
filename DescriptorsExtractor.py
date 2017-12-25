@@ -6,7 +6,6 @@ from essentia import pool
 import numpy as np
 import csv
 
-
 def featExtraction (inputFile):
 
     #fileName = inputFile
@@ -49,12 +48,18 @@ def featExtraction (inputFile):
     for i in range (0,len(offsets)): s_offsets.append(int(round(offsets[i]*SR,0)))
 
 
+    starts = []
+    ends = []
+
     wmargin = int(round(0.1*SR))    #MARGIN FOR NOTES ISOLATION : 100 ms  
     note = []
     for i in range(0,len(s_onsets)):
         note.append(audio[s_onsets[i]-wmargin:s_offsets[i]+wmargin])
+        starts.append((s_onsets[i]-wmargin)/float(SR))
+        ends.append((s_offsets[i]+wmargin)/float(SR))
 
-
+    duration = []
+    for i in range(0,len(starts)): duration.append(ends[i]-starts[i])
 
     extractor = Extractor(dynamics = True,
                         dynamicsFrameSize = 88200,
@@ -97,39 +102,53 @@ def featExtraction (inputFile):
     annotatedNote = ['la3', 'mi4', 'la4', 'do4', 'do3', 'fa3', 're4', 'mi4']
 
 
-    ##### WRITING CSV FILES
+    ##### CSV FILES HEADERS
 
     fieldNames = pool.descriptorNames()[0:4]
+    fieldNamesAggr = aggrPool.descriptorNames()[0:8]
 
     fieldNamesCSV = []
     fieldNamesCSV.append('Note')
-    for i in range(0,4): fieldNamesCSV.append(pool.descriptorNames()[i])
-    fieldNamesAggr = aggrPool.descriptorNames()[0:8]
+    fieldNamesCSV.append('Frame')    
+    fieldNamesCSV.append('StartTime')
+    fieldNamesCSV.append('EndingTime')
+    fieldNamesCSV.append('Duration')
+    for i in range(0,len(fieldNamesAggr)): fieldNamesCSV.append(fieldNamesAggr[i])
+    for i in range(0,len(fieldNames)): fieldNamesCSV.append(fieldNames[i])
+ 
 
-    print fieldNames
-    print type(fieldNames)
+    ##### WRITING CSV CONTENT
 
     with open(str(fileName.rsplit('/',1)[0]) + '/test.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(fieldNamesCSV)
         for i in range(0, len(note)):
             pool = extractor(note[i])
+            aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)
+            arrAggr = []
+            for k in fieldNamesAggr: arrAggr.append(aggrPool[k])
             for j in range(0,10):#len(note[i]/2048 +2)):
                 arr = []
                 arr.append(annotatedNote[i])
+                arr.append(j)
+                arr.append(starts[i])
+                arr.append(ends[i])
+                arr.append(duration[i])
+                for t in range(0,len(arrAggr)):arr.append(arrAggr[t])
                 for f in fieldNames: arr.append(pool[f][j])
                 writer.writerow(arr)
 
     #ADD THE fieldNamesAggrCSV to write the needed columns!
+    #ALREADY INTEGRATED IN test.csv
 
-    with open(str(fileName.rsplit('/',1)[0]) + '/testAggr.csv', 'w') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(fieldNamesAggr)
-        for i in range(0, len(note)):
-            pool = extractor(note[i])
-            aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)
-            arr = [aggrPool[f] for f in fieldNamesAggr]
-            writer.writerow(arr)
+#    with open(str(fileName.rsplit('/',1)[0]) + '/testAggr.csv', 'w') as csvfile:
+#        writer = csv.writer(csvfile)
+#        writer.writerow(fieldNamesAggr)
+#        for i in range(0, len(note)):
+#            pool = extractor(note[i])
+#            aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)
+#            arr = [aggrPool[f] for f in fieldNamesAggr]
+#            writer.writerow(arr)
 
   
 
