@@ -104,10 +104,14 @@ def featExtraction (inputFile):
 
     ##### CSV FILES HEADERS
 
-    fieldNames = pool.descriptorNames()[0:4]
-    fieldNamesAggr = aggrPool.descriptorNames()[0:8]
+    fieldNames = pool.descriptorNames()
+    #LOUDNESS RETURNS INDEX OUT OF BOUNDS
+    fieldNames.remove("lowLevel.loudness")
+    fieldNamesAggr = aggrPool.descriptorNames()
+
 
     fieldNamesCSV = []
+    #fieldNamesCSV.append('Class')
     fieldNamesCSV.append('Note')
     fieldNamesCSV.append('Frame')    
     fieldNamesCSV.append('StartTime')
@@ -115,11 +119,11 @@ def featExtraction (inputFile):
     fieldNamesCSV.append('Duration')
     for i in range(0,len(fieldNamesAggr)): fieldNamesCSV.append(fieldNamesAggr[i])
     for i in range(0,len(fieldNames)): fieldNamesCSV.append(fieldNames[i])
- 
+    fieldNamesCSV.append('Class')
+
 
     ##### WRITING CSV CONTENT
-
-    with open(str(fileName.rsplit('/',1)[0]) + '/test.csv', 'w') as csvfile:
+    with open(str(fileName.rsplit('/',1)[0]) + '/' + (fileName.split('_')[0]).split('/')[-1] + '.csv', 'w') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(fieldNamesCSV)
         for i in range(0, len(note)):
@@ -127,16 +131,20 @@ def featExtraction (inputFile):
             aggrPool = PoolAggregator(defaultStats = [ 'mean', 'var' ])(pool)
             arrAggr = []
             for k in fieldNamesAggr: arrAggr.append(aggrPool[k])
-            for j in range(0,10):#len(note[i]/2048 +2)):
+            for j in range(0,len(note[i])/2048):
                 arr = []
+                #arr.append((fileName.split('_')[0]).split('/')[-1])
                 arr.append(annotatedNote[i])
                 arr.append(j)
                 arr.append(starts[i])
                 arr.append(ends[i])
                 arr.append(duration[i])
                 for t in range(0,len(arrAggr)):arr.append(arrAggr[t])
-                for f in fieldNames: arr.append(pool[f][j])
+                for f in fieldNames:
+                    arr.append(pool[f][j])
+                arr.append((fileName.split('_')[0]).split('/')[-1])
                 writer.writerow(arr)
+
 
     #ADD THE fieldNamesAggrCSV to write the needed columns!
     #ALREADY INTEGRATED IN test.csv
