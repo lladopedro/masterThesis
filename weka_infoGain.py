@@ -28,7 +28,10 @@ import weka.gui.visualize as visualize
 
 print "Loading data..."
 # load data
-file = DSave.read("/home/pedro/tfm/dataBaseFull/CorrectedAudioSofia/zzzWEKA/ZOOM00089_featSel.csv")
+
+file_path = "/home/pedro/tfm/dataBaseFull/CorrectedAudioSofia/zzzWEKA/ZOOM00089_featSel.csv"
+print str(file_path).split('.')[0]
+file = DSave.read(file_path)
 data = Instances(file)
 
 numAttr = data.numAttributes()
@@ -50,13 +53,16 @@ MyClassifier = []
 #MyClassifier.append(weka.classifiers.rules.ZeroR())
 MyClassifier.append(weka.classifiers.rules.OneR())
 MyClassifier.append(weka.classifiers.trees.J48())
+MyClassifier.append(weka.classifiers.functions.Logistic())
+MyClassifier.append(weka.classifiers.functions.SMO())
+
 print (MyClassifier[0].getClass())
 
 print ()
 
-my_file = open('/home/pedro/Descargas/test.csv','w')
+my_file = open(str('/home/pedro/tfm/Results/' + str(file_path).split('/')[-1].split('.')[0]) + ".csv",'w')
 headers = []
-for j in range(0,maxNumAt): headers.append("Acc w/ %d att." %j)
+for j in range(1,maxNumAt): headers.append("Acc w/ %d att." %j)
 CSVtitle = "Classifier", headers
 my_file.write(str(CSVtitle) + "\n")
 
@@ -101,19 +107,17 @@ for i in range(0,len(MyClassifier)): #Computing with each classifier
     print (infoGainCurve)
     
 
+    ##### PLOT
+
     x_val = []
     for k in range (1,maxNumAt+1):x_val.append(k)
-    
     xArr = array(x_val, 'd')
-    
     yArr = array(infoGainCurve,'d') 
-    
-    plot = Plot("Info gain by number of attributes", "Number of Attributes", "Accuracy %")
-    plot.setLimits(0.0, numAttr+1 ,60, 100.0)
+    plot = Plot("%s" %str(MyClassifier[i].getClass()).split("'")[1], "Number of Attributes", "Accuracy %")
+    plot.setLimits(0.0, numAttr+1 ,50, 100.0)
     plot.setColor(Color.RED)
     plot.addPoints(xArr,yArr, Plot.LINE)
-    
-    #plot.show()
+    plot.show()
     
 
     my_file.write(str(MyClassifier[i].getClass()).split("'")[1] + "," + str(infoGainCurve) + "\n")
@@ -126,5 +130,6 @@ for i in range(0,len(MyClassifier)): #Computing with each classifier
     #SaveFile = DSink("/home/pedro/Descargas/test.csv")
     #SaveFile.write(output)
     #DSink.main(["/home/pedro/Descargas/test.csv", str(infoGainCurve)])
-    
+
+
 my_file.close()
